@@ -423,7 +423,7 @@ export default {
       this.resultNoticeVisible = true;
     },
     doBuffQuery(query) {
-      if (query == "")
+      if (query == "" || query == 0)
         this.querySkillConditions = this.conditions.slice(0, 100);
       else {
         this.querySkillConditions = this.conditions.filter((item) => {
