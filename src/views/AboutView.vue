@@ -1,5 +1,15 @@
 <template>
   <div class="about">
-    <h1>This is an about page</h1>
+    <buff-condition></buff-condition>
   </div>
 </template>
+<script>
+import BuffCondition from '@/components/BuffCondition.vue'
+
+export default {
+  name: 'AboutView',
+  components: {
+    BuffCondition
+  }
+}
+</script>

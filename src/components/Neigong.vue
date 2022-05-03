@@ -131,21 +131,20 @@
           ></el-input-number>
           <el-select
             filterable
-            remote
-            :remote-method="querySkillCondition"
+            reserve-keyword	
+            :filter-method="doBuffQuery"
             v-model="ng.skills[index].skillId"
-            :loading="queryLoading"
-            placeholder="输入关键词搜索,空格显示全部"
+            placeholder="输入关键词搜索"
             class="el-col-12"
           >
             <el-option
               v-for="condition in querySkillConditions"
-              :label="condition.name"
-              :key="condition.id"
-              :value="condition.id"
-              :title="condition.description"
+              :label="condition.CondName"
+              :key="condition.ConditionID"
+              :value="condition.ConditionID"
+              :title="condition.CondDesc"
             >
-              <span style="float: left">{{ condition.name }}</span>
+              <span style="float: left">{{ condition.CondName }}</span>
               <span
                 style="
                   float: right;
@@ -156,7 +155,7 @@
                   white-space: nowrap;
                   padding-left: 20px;
                 "
-                >{{ condition.description }}</span
+                >{{ condition.CondDesc }}</span
               >
             </el-option>
           </el-select>
@@ -233,7 +232,6 @@ export default {
         ngResult: "",
       },
       title: "创建内功",
-      queryLoading: false,
       ruleProperties: {},
       conditions: [],
       querySkillConditions: [],
@@ -307,7 +305,7 @@ export default {
         const condition = value["level"];
         let skillId = value["skillId"];
         neigong.conditions.forEach((n) => {
-          if (n["id"] === skillId) {
+          if (n["ConditionID"] === skillId) {
             if (condition !== 0) {
               result += condition + "重 " + n["name"] + " ";
             } else {
@@ -334,14 +332,14 @@ export default {
         const NG = this;
         while (newValue.length > 0) {
           let skillId = newValue.shift();
-          let condition = NG.conditions.find((n) => n.id == skillId);
+          let condition = NG.conditions.find((n) => n.ConditionID == skillId);
           if (condition) {
             NG.querySkillConditions.push(condition);
           } else {
             NG.querySkillConditions.push({
-              id: skillId,
-              name: "unKnown技能",
-              description: "也许是mod中的技能，效果未知",
+              ConditionID: skillId,
+              CondName: "unKnown技能",
+              CondDesc: "也许是mod中的技能，效果未知",
             });
           }
 
@@ -379,19 +377,17 @@ export default {
       this.fullscreenLoading = false;
       this.resultNoticeVisible = true;
     },
-    querySkillCondition(query) {
-      this.queryLoading = true;
-      if (query.trim() === "") this.querySkillConditions = this.conditions;
+    doBuffQuery(query) {
+      if (query.trim() === "") this.querySkillConditions = this.conditions.slice(0, 100);
       else {
         this.querySkillConditions = this.conditions.filter((item) => {
-          if (item.name && item.name.indexOf(query) > -1) return true;
-          else if (item.description && item.description.indexOf(query) > -1)
+          if (item.CondName && item.CondName.indexOf(query) > -1) return true;
+          else if (item.CondDesc && item.CondDesc.indexOf(query) > -1)
             return true;
-          else if (item.id && item.id.indexOf(query) > -1) return true;
+          else if (item.ConditionID && item.ConditionID.indexOf(query) > -1) return true;
           return false;
         });
       }
-      this.queryLoading = false;
     },
     importNg() {
       let result = this.ng.ngResult.split("\t");
@@ -420,6 +416,7 @@ export default {
     const neigong = this;
     neigong.ruleProperties = ruleProperties;
     neigong.conditions = dataProcess.text2Dict(conditionsData);
+    neigong.querySkillConditions = neigong.conditions.slice(0, 100);
   },
 };
 </script>
