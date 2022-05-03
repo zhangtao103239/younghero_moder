@@ -158,16 +158,16 @@
                 placeholder="输入关键词搜索,空格显示全部"
                 class="el-col-12"
                 filterable
-                :filter-method="querySkillCondition"
+                :filter-method="doBuffQuery"
                 v-model="buff.effects[index].value1"
               >
                 <el-option
                   v-for="condition in querySkillConditions"
-                  :label="condition.name"
-                  :key="condition.id"
-                  :value="condition.id"
+                  :label="condition.CondName"
+                  :key="condition.ConditionID"
+                  :value="condition.ConditionID"
                 >
-                  <span style="float: left">{{ condition.name }}</span>
+                  <span style="float: left">{{ condition.CondName }}</span>
                   <span
                     style="
                       float: right;
@@ -175,13 +175,13 @@
                       text-overflow: ellipsis;
                     "
                     >{{
-                      condition.description
-                        ? condition.description.slice(
-                            -70 + condition.name.length
+                      condition.CondDesc
+                        ? condition.CondDesc.slice(
+                            -70 + condition.CondName.length
                           )
                         : ""
-                    }}</span
-                  >
+                    }}
+                  </span>
                 </el-option>
               </el-select>
               <el-select
@@ -190,16 +190,16 @@
                 placeholder="输入关键词搜索,空格显示全部"
                 class="el-col-12"
                 filterable
-                :filter-method="querySkillCondition"
+                :filter-method="doBuffQuery"
                 v-model="buff.effects[index].value2"
               >
                 <el-option
                   v-for="condition in querySkillConditions"
-                  :label="condition.name"
-                  :key="condition.id"
-                  :value="condition.id"
+                  :label="condition.CondName"
+                  :key="condition.ConditionID"
+                  :value="condition.ConditionID"
                 >
-                  <span style="float: left">{{ condition.name }}</span>
+                  <span style="float: left">{{ condition.CondName }}</span>
                   <span
                     style="
                       float: right;
@@ -207,9 +207,9 @@
                       text-overflow: ellipsis;
                     "
                     >{{
-                      condition.description
-                        ? condition.description.slice(
-                            -70 + condition.name.length
+                      condition.CondDesc
+                        ? condition.CondDesc.slice(
+                            -70 + condition.CondName.length
                           )
                         : ""
                     }}</span
@@ -283,7 +283,7 @@
 
 <script>
 import dataProcess from "../tools/data-process";
-import {buffEffectTypeInfo, conditionsData} from "../tools/mod-resources";
+import { buffEffectTypeInfo, conditionsData } from "../tools/mod-resources";
 export default {
   name: "BuffCondition",
   data() {
@@ -344,7 +344,7 @@ export default {
   computed: {},
   methods: {
     importBuff() {
-      this.querySkillConditions = this.conditions;
+      this.querySkillConditions = [];
       let result = this.buffResult.split("\t");
       if (result.length > 15) {
         this.fullscreenLoading = true;
@@ -370,6 +370,10 @@ export default {
           let value2 = effectList.shift();
           let valueLimit = effectList.shift();
           let exchangeValue = value2 == "0";
+          if (type.trim() == "") {
+            break;
+          }
+          this.querySkillConditions.push(...this.conditions.filter(c => c.ConditionID == value1 || c.ConditionID == value2))
           this.buff.effects.push({
             type: type,
             accumulate: accumulate,
@@ -418,12 +422,13 @@ export default {
       this.fullscreenLoading = false;
       this.resultNoticeVisible = true;
     },
-    querySkillCondition(query) {
-      if (query == "") this.querySkillConditions = this.conditions;
+    doBuffQuery(query) {
+      if (query == "")
+        this.querySkillConditions = this.conditions.slice(0, 100);
       else {
         this.querySkillConditions = this.conditions.filter((item) => {
-          if (item.name && item.name.indexOf(query) > -1) return true;
-          else if (item.description && item.description.indexOf(query) > -1)
+          if (item.CondName && item.CondName.indexOf(query) > -1) return true;
+          else if (item.CondDesc && item.CondDesc.indexOf(query) > -1)
             return true;
           return false;
         });
@@ -439,6 +444,7 @@ export default {
     const buff = this;
     buff.buffEffectTypeList = buffEffectTypeInfo;
     buff.conditions = dataProcess.text2Dict(conditionsData);
+    buff.querySkillConditions = buff.conditions.slice(0, 100);
   },
 };
 </script>
