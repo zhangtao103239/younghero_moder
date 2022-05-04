@@ -1,16 +1,29 @@
 <template>
   <div class="home">
-    <neigong></neigong>
+    <save-file-picker @open-save="handlerSaveOpen"></save-file-picker>
+    <show-save :saveFileHandler="saveFileHandler"></show-save>
   </div>
 </template>
 
 <script>
-import Neigong from '@/components/Neigong.vue'
+import SaveFilePicker from "@/components/SaveFilePicker.vue";
+import ShowSave from "@/components/ShowSave.vue";
 
 export default {
-  name: 'HomeView',
+  name: "HomeView",
   components: {
-    Neigong
-  }
-}
+    SaveFilePicker,
+    ShowSave,
+  },
+  data() {
+    return {
+      saveFileHandler: null,
+    };
+  },
+  methods: {
+    handlerSaveOpen: function (fileHandler) {
+      this.saveFileHandler = fileHandler;
+    },
+  },
+};
 </script>

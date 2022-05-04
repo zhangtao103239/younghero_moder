@@ -737,7 +737,7 @@ export let neigongData = `#ID	Name	Desc	sUpgradeNotes	LevelUP	MaxUP	iExp	sIcon1	
 87051	幽冥之力		0	0	0	3	NeigongImage33	987218	0	0	0	0	0	0
 87052	求败心诀	南天槐因缘际会下习得之神秘武学，能激发人体极限，越战越勇。	0	0	0	0	0	10	1	500117	0	80	0	10`
 
-export let npcData = `#iID	s3DModel	sMaxImage	sAllImage	sMemberImage	sSmallImage	iFriendly	sNpcName	sIntroduction	iGenderType	iMartialType	sTitle	后日谈ID
+export let npcData = `#ID	s3DModel	sMaxImage	sAllImage	sMemberImage	sSmallImage	iFriendly	sNpcName	sIntroduction	iGenderType	iMartialType	sTitle	sAfterId
 100001	TL_ysky	B100001	100001	M100001	S100001	0	厉苍天	本名厉苍天，天龙八部之首，天龙教创教者。在许多江湖人心中，天王就是邪恶的化身、武林大魔头。但很少有人知道天王心中的宏图伟业，要在遥远的西方，创建一个没有纷争的理想国。	1	1	天王	0
 100002	TL_sky	B100002	100002	M100002	S100002	0	厉苍天	本名厉苍天，天龙八部之首，天龙教创教者。在许多江湖人心中，天王就是邪恶的化身、武林大魔头。但很少有人知道天王心中的宏图伟业，要在遥远的西方，创建一个没有纷争的理想国。	1	1	天王	0
 100003	TL_ydragon	B100003	100003	M100003	S100003	0	厉苍龙	本名厉苍龙，天龙八部之龙，现任天龙教教主。与兄长相比，龙王行事更加霸道乖戾，武功手段更为狠毒。龙王的唯一目标，就是称霸武林。	1	1	龙王	0

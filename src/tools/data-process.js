@@ -14,7 +14,12 @@ var dataProcess = {
       var result = {};
       array.forEach(function (v, index) {
         var key = resultHeader[index];
-        result[key] = v.replace(/<br>/g, " ");
+        let value = v.replace(/<br>/g, " ");
+        if (/^\d+$/.test(value)) {
+          result[key] = parseInt(value)
+        } else {
+          result[key] = value;
+        }
       });
       resultList.push(result);
       i++;
