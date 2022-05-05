@@ -31,19 +31,10 @@
         <el-button type="primary" plain @click="iteamVisible = true"
           >增加物品</el-button
         >
-        <el-table
-          :data="saveData.m_BackpackList"
-          style="width: 100%"
-          max-height="360"
-        >
-          <el-table-column prop="m_ItemID" label="物品ID" width="80">
+        <el-table :data="backpackList" style="width: 100%" max-height="360">
+          <el-table-column prop="ID" label="物品ID" width="80">
           </el-table-column>
-          <el-table-column label="物品名称" width="140">
-            <template slot-scope="scope">
-              <span style="margin-left: 10px">{{
-                itemInfo(scope.row.m_ItemID).Name
-              }}</span>
-            </template>
+          <el-table-column label="物品名称" width="140" prop="Name">
           </el-table-column>
           <el-table-column
             label="分类"
@@ -58,18 +49,12 @@
             <template slot-scope="scope">
               <span>{{
                 ["", "武器", "防具", "饰品", "消耗品", "任务品", "秘籍"][
-                  itemInfo(scope.row.m_ItemID).Type
+                  scope.row.Type
                 ]
               }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="物品描述">
-            <template slot-scope="scope">
-              <span style="margin-left: 10px">{{
-                itemInfo(scope.row.m_ItemID).Desc
-              }}</span>
-            </template>
-          </el-table-column>
+          <el-table-column label="物品描述" prop="Desc"> </el-table-column>
           <el-table-column label="物品数量" width="180">
             <template slot-scope="scope">
               <el-input-number
@@ -127,60 +112,6 @@
         >
       </el-transfer>
     </el-dialog>
-    <el-dialog title="增加物品" :visible.sync="iteamVisible" width="60rem">
-      <el-table
-        :data="
-          items.filter(
-            (i) =>
-              !searchItem ||
-              i.Name.indexOf(searchItem) != -1 ||
-              i.Desc.indexOf(searchItem) != -1
-          )
-        "
-        style="width: 100%"
-        max-height="360"
-        @selection-change="handleItemSelect"
-      >
-        <el-table-column type="selection" width="55"> </el-table-column>
-        <el-table-column prop="ID" label="物品ID" width="80"> </el-table-column>
-        <el-table-column prop="Name" label="物品名称" width="140">
-        </el-table-column>
-        <el-table-column
-          label="分类"
-          width="80"
-          :filters="
-            ['武器', '防具', '饰品', '消耗品', '任务品', '秘籍'].map(
-              (t, i) => ({ text: t, value: i + 1 })
-            )
-          "
-          :filter-method="doFilterItemType"
-        >
-          <template slot-scope="scope">
-            <span>{{
-              ["", "武器", "防具", "饰品", "消耗品", "任务品", "秘籍"][
-                scope.row.Type
-              ]
-            }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="Desc" label="物品描述"> </el-table-column>
-        <el-table-column label="物品描述2" width="140">
-          <template slot="header">
-            <el-input
-              v-model="searchItem"
-              size="mini"
-              placeholder="输入关键字搜索"
-            />
-          </template>
-          <template slot-scope="scope">
-            <span>{{ scope.row.Desc2 || "" }}</span>
-          </template>
-        </el-table-column>
-      </el-table>
-      <el-button @click="handleAddItem" style="margin-top: 10px"
-        >添加</el-button
-      >
-    </el-dialog>
   </div>
 </template>
 
@@ -203,6 +134,48 @@ export default {
     };
   },
   props: ["saveFileHandler"],
+  computed: {
+    backpackList: {
+      get: function () {
+        if (this.saveData.m_BackpackList && this.items) {
+          let items = [...this.items];
+          for (let item in items) {
+            let old = this.saveData.m_BackpackList.find(
+              (i) => i.m_ItemID == item.ID
+            );
+            if (old) {
+              item.m_iAmount = old.m_iAmount;
+            } else {
+              item.m_iAmount = 0;
+            }
+          }
+          return items;
+        }
+        return [];
+      },
+      set: function (newValue) {
+        for (let item in newValue) {
+          if (item.m_iAmount) {
+            let old = this.saveData.m_BackpackList.find(
+              (i) => i.m_ItemID == item.ID
+            );
+            if (old) {
+              if (old.m_iAmount != item.m_iAmount) {
+                old.m_iAmount = item.m_iAmount;
+                old.m_bNew = true;
+              }
+            } else {
+              this.saveData.m_BackpackList.push({
+                m_ItemID: item.ID,
+                m_iAmount: item.m_iAmount,
+                m_bNew: true,
+              });
+            }
+          }
+        }
+      },
+    },
+  },
   methods: {
     npcInfo(npcId) {
       return this.npcs.find((npc) => npc.ID == npcId) || {};
@@ -256,7 +229,6 @@ export default {
       }
     },
   },
-  computed: {},
   mounted() {
     this.npcs = dataProcess.text2Dict(npcData);
     this.items = dataProcess.text2Dict(itemData);
