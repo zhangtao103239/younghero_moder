@@ -28,10 +28,28 @@
         </el-row>
       </el-form-item>
       <el-form-item label="物品栏">
-        <el-button type="primary" plain @click="iteamVisible = true"
-          >增加物品</el-button
+        <el-input
+          v-model="searchItem"
+          size="medium"
+          style="width: 20rem; margin: 10px auto"
         >
-        <el-table :data="backpackList" style="width: 100%" max-height="360">
+          <template slot="prepend"><i class="el-icon-search"></i></template>
+        </el-input>
+        <el-table
+          :data="
+            myItems.filter(
+              (i) =>
+                !searchItem ||
+                searchItem.trim() == '' ||
+                i.Name.indexOf(searchItem) != -1 ||
+                i.Desc.indexOf(searchItem) != -1
+            )
+          "
+          border
+          style="width: 100%"
+          max-height="360"
+          height="360"
+        >
           <el-table-column prop="ID" label="物品ID" width="80">
           </el-table-column>
           <el-table-column label="物品名称" width="140" prop="Name">
@@ -44,7 +62,8 @@
                 (t, i) => ({ text: t, value: i + 1 })
               )
             "
-            :filter-method="doFilterItemType"
+            :filter-multiple="false"
+            :filter-method="(query, row) => row.Type == query"
           >
             <template slot-scope="scope">
               <span>{{
@@ -55,12 +74,26 @@
             </template>
           </el-table-column>
           <el-table-column label="物品描述" prop="Desc"> </el-table-column>
-          <el-table-column label="物品数量" width="180">
+          <el-table-column
+            label="物品数量"
+            width="110"
+            :filters="[
+              { text: '已有', value: 1 },
+              { text: '新增', value: 0 },
+            ]"
+            :filter-multiple="false"
+            :filtered-value="[1]"
+            :filter-method="
+              (query, row) =>
+                query == 0 ? row.m_iAmount == 0 : row.m_iAmount > 0
+            "
+          >
             <template slot-scope="scope">
               <el-input-number
-                style="margin-left: 10px"
+                style="margin-left: 10px; width: 5rem"
                 v-model="scope.row.m_iAmount"
                 size="mini"
+                :min="0"
                 :controls="false"
               ></el-input-number>
             </template>
@@ -70,7 +103,11 @@
       <el-form-item label="队伍成员">
         <el-row type="flex" justify="space-around">
           <el-col :span="10">
-            <el-select v-model="currentTeammate" placeholder="选择队员进行修改">
+            <el-select
+              v-model="currentTeammate"
+              placeholder="选择队员进行修改"
+              @change="chooseTeammate"
+            >
               <el-option
                 v-for="npcId in saveData.m_TeammateList"
                 :key="npcId"
@@ -84,11 +121,76 @@
           </el-col>
         </el-row>
       </el-form-item>
-      <el-form-item
-        :label="npcInfo(currentTeammate).sNpcName"
-        v-if="currentTeammate"
-      >
-      </el-form-item>
+      <el-form inline v-if="currentTeammate">
+        <el-form-item label="臂力">
+          <el-input-number
+            style="margin-left: 10px; width: 3rem"
+            v-model="currentTeammateInfo.iStr"
+            size="mini"
+            :min="0"
+            :controls="false"
+          ></el-input-number
+          >/
+          <el-input-number
+            style="width: 3rem"
+            v-model="currentTeammateInfo.iMaxStr"
+            size="mini"
+            :min="0"
+            :controls="false"
+          ></el-input-number>
+        </el-form-item>
+        <el-form-item label="根骨">
+          <el-input-number
+            style="width: 3rem"
+            v-model="currentTeammateInfo.iCon"
+            size="mini"
+            :min="0"
+            :controls="false"
+          ></el-input-number
+          >/
+          <el-input-number
+            style="width: 3rem"
+            v-model="currentTeammateInfo.iMaxCon"
+            size="mini"
+            :min="0"
+            :controls="false"
+          ></el-input-number>
+        </el-form-item>
+        <el-form-item label="悟性">
+          <el-input-number
+            style="width: 4rem"
+            v-model="currentTeammateInfo.iInt"
+            size="mini"
+            :min="0"
+            :controls="false"
+          ></el-input-number
+          >/
+          <el-input-number
+            style="width: 4rem"
+            v-model="currentTeammateInfo.iMaxInt"
+            size="mini"
+            :min="0"
+            :controls="false"
+          ></el-input-number>
+        </el-form-item>
+        <el-form-item label="身法">
+          <el-input-number
+            style="width: 4rem"
+            v-model="currentTeammateInfo.iDex"
+            size="mini"
+            :min="0"
+            :controls="false"
+          ></el-input-number
+          >/
+          <el-input-number
+            style="width: 4rem"
+            v-model="currentTeammateInfo.iMaxDex"
+            size="mini"
+            :min="0"
+            :controls="false"
+          ></el-input-number>
+        </el-form-item>
+      </el-form>
     </el-form>
     <p v-else>请选择存档文件</p>
     <el-dialog title="修改队员" :visible.sync="teammateVisible" width="40rem">
@@ -116,7 +218,7 @@
 </template>
 
 <script>
-import { npcData, itemData } from "../tools/mod-resources";
+import { npcData, itemData, talentNewData } from "../tools/mod-resources";
 import dataProcess from "../tools/data-process";
 export default {
   name: "ShowSave",
@@ -124,8 +226,12 @@ export default {
     return {
       saveData: {},
       currentTeammate: null,
+      currentTeammateInfo: {},
       npcs: [],
       items: [],
+      talents: [],
+      myTalents: [],
+      myItems: [],
       filteredNpcs: [],
       teammateVisible: false,
       iteamVisible: false,
@@ -134,54 +240,10 @@ export default {
     };
   },
   props: ["saveFileHandler"],
-  computed: {
-    backpackList: {
-      get: function () {
-        if (this.saveData.m_BackpackList && this.items) {
-          let items = [...this.items];
-          for (let item in items) {
-            let old = this.saveData.m_BackpackList.find(
-              (i) => i.m_ItemID == item.ID
-            );
-            if (old) {
-              item.m_iAmount = old.m_iAmount;
-            } else {
-              item.m_iAmount = 0;
-            }
-          }
-          return items;
-        }
-        return [];
-      },
-      set: function (newValue) {
-        for (let item in newValue) {
-          if (item.m_iAmount) {
-            let old = this.saveData.m_BackpackList.find(
-              (i) => i.m_ItemID == item.ID
-            );
-            if (old) {
-              if (old.m_iAmount != item.m_iAmount) {
-                old.m_iAmount = item.m_iAmount;
-                old.m_bNew = true;
-              }
-            } else {
-              this.saveData.m_BackpackList.push({
-                m_ItemID: item.ID,
-                m_iAmount: item.m_iAmount,
-                m_bNew: true,
-              });
-            }
-          }
-        }
-      },
-    },
-  },
+  computed: {},
   methods: {
     npcInfo(npcId) {
       return this.npcs.find((npc) => npc.ID == npcId) || {};
-    },
-    itemInfo(itemID) {
-      return this.items.find((i) => i.ID == itemID) || {};
     },
     doNpcFilter(query, item) {
       if (query.trim() == "") {
@@ -189,30 +251,16 @@ export default {
       }
       return (
         item.sNpcName.indexOf(query) != -1 ||
-        item.sIntroduction.indexOf(query) != -1
+        (item.sIntroduction && item.sIntroduction.indexOf(query) != -1)
       );
     },
-    doFilterItemType(query, row) {
-      if (row.Type) {
-        return query == row.Type;
-      } else {
-        return this.itemInfo(row.m_ItemID).Type == query;
-      }
-    },
-    handleAddItem() {
-      this.saveData.m_BackpackList.push(
-        ...this.selectedItem.map((i) => {
-          return {
-            m_bNew: true,
-            m_iAmount: 1,
-            m_ItemID: i.ID,
-          };
-        })
+    chooseTeammate(value) {
+      this.currentTeammateInfo = this.saveData.m_NpcList.find(
+        (n) => n.iNpcID == value
       );
-      this.iteamVisible = false;
-    },
-    handleItemSelect(value) {
-      this.selectedItem = value;
+      this.myTalents = this.currentTeammateInfo.TalentList.map((talent) =>
+        this.talents.find((t) => t.iTalenID == talent)
+      );
     },
   },
   watch: {
@@ -223,8 +271,24 @@ export default {
           let file = await newValue.getFile();
           const contents = await file.text();
           this.saveData = JSON.parse(contents);
-          this.filteredNpcs = this.npcs;
+          this.filteredNpcs = this.npcs.filter((n) =>
+            this.saveData.m_NpcList.find((npc) => npc.iNpcID == n.ID)
+          );
           // this.filteredNpcs = this.npcs.filter((n) => n.iFriendly == 1);
+          if (this.saveData.m_BackpackList && this.items) {
+            let items = [...this.items];
+            items.forEach((item) => {
+              let old = this.saveData.m_BackpackList.find(
+                (i) => i.m_ItemID == item.ID
+              );
+              if (old) {
+                item.m_iAmount = old.m_iAmount;
+              } else {
+                item.m_iAmount = 0;
+              }
+            });
+            this.myItems = items;
+          }
         }
       }
     },
@@ -232,6 +296,7 @@ export default {
   mounted() {
     this.npcs = dataProcess.text2Dict(npcData);
     this.items = dataProcess.text2Dict(itemData);
+    this.talents = dataProcess.text2Dict(talentNewData);
   },
 };
 </script>
