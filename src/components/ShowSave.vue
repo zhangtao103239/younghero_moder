@@ -254,32 +254,74 @@
               </el-option>
             </el-select>
           </el-form-item>
+          <el-form-item label="血量">
+            <el-input-number
+              style="margin-left: 10px; width: 3rem"
+              v-model="currentTeammateInfo.iMaxHp"
+              size="mini"
+              :min="0"
+              :controls="false"
+            ></el-input-number>
+          </el-form-item>
+          <el-form-item label="内力">
+            <el-input-number
+              style="margin-left: 10px; width: 3rem"
+              v-model="currentTeammateInfo.iMaxSp"
+              size="mini"
+              :min="0"
+              :controls="false"
+            ></el-input-number>
+          </el-form-item>
+          <el-form-item label="暴击">
+            <el-input-number
+              style="margin-left: 10px; width: 3rem"
+              v-model="currentTeammateInfo.iCri"
+              size="mini"
+              :min="0"
+              :controls="false"
+            ></el-input-number>
+          </el-form-item>
+          <el-form-item label="反击">
+            <el-input-number
+              style="margin-left: 10px; width: 3rem"
+              v-model="currentTeammateInfo.iCounter"
+              size="mini"
+              :min="0"
+              :controls="false"
+            ></el-input-number>
+          </el-form-item>
+          <el-form-item label="闪避">
+            <el-input-number
+              style="margin-left: 10px; width: 3rem"
+              v-model="currentTeammateInfo.iDodge"
+              size="mini"
+              :min="0"
+              :controls="false"
+            ></el-input-number>
+          </el-form-item>
+          <el-form-item label="连击">
+            <el-input-number
+              style="margin-left: 10px; width: 3rem"
+              v-model="currentTeammateInfo.iCombo"
+              size="mini"
+              :min="0"
+              :controls="false"
+            ></el-input-number>
+          </el-form-item>
+          <el-form-item label="移动格数">
+            <el-input-number
+              style="margin-left: 10px; width: 3rem"
+              v-model="currentTeammateInfo.iMoveStep"
+              size="mini"
+              :min="0"
+              :controls="false"
+            ></el-input-number>
+          </el-form-item>
         </el-form>
       </el-form-item>
     </el-form>
 
     <p v-else>请选择存档文件</p>
-    <el-dialog title="修改队员" :visible.sync="teammateVisible" width="40rem">
-      <el-transfer
-        style="text-align: left"
-        filterable
-        :filter-method="doNpcFilter"
-        v-model="saveData.m_TeammateList"
-        :data="filteredNpcs"
-        :titles="['候选', '选中']"
-        :props="{
-          key: 'ID',
-          label: 'sNpcName',
-        }"
-      >
-        <span
-          slot-scope="{ option }"
-          :title="option.sIntroduction"
-          style="font-size: 12px"
-          >{{ option.ID }}-{{ option.sNpcName }}</span
-        >
-      </el-transfer>
-    </el-dialog>
   </div>
 </template>
 
