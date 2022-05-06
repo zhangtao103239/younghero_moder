@@ -190,6 +190,35 @@
             :controls="false"
           ></el-input-number>
         </el-form-item>
+        <el-form-item label="天赋">
+          <el-select
+            style="width: 40rem"
+            multiple
+            v-model="currentTeammateInfo.TalentList"
+          >
+            <el-option
+              v-for="talent in talents"
+              :key="talent.iTalenID"
+              :label="talent.sTalenName"
+              :value="talent.iTalenID"
+              :title="talent.sTalenTip"
+            >
+              <span style="float: left">{{ talent.sTalenName }}</span>
+              <span
+                style="
+                  float: right;
+                  font-size: 0.7rem;
+                  text-overflow: ellipsis;
+                  width: 35em;
+                  overflow: hidden;
+                  white-space: nowrap;
+                  padding-left: 20px;
+                "
+                >{{ talent.sTalenTip }}</span
+              >
+            </el-option>
+          </el-select>
+        </el-form-item>
       </el-form>
     </el-form>
     <p v-else>请选择存档文件</p>
@@ -230,7 +259,6 @@ export default {
       npcs: [],
       items: [],
       talents: [],
-      myTalents: [],
       myItems: [],
       filteredNpcs: [],
       teammateVisible: false,
@@ -257,9 +285,6 @@ export default {
     chooseTeammate(value) {
       this.currentTeammateInfo = this.saveData.m_NpcList.find(
         (n) => n.iNpcID == value
-      );
-      this.myTalents = this.currentTeammateInfo.TalentList.map((talent) =>
-        this.talents.find((t) => t.iTalenID == talent)
       );
     },
   },
