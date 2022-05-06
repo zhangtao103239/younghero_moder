@@ -28,24 +28,17 @@
         </el-row>
       </el-form-item>
       <el-form-item label="物品栏">
-        <el-input
-          v-model="searchItem"
-          size="medium"
-          style="width: 20rem; margin: 10px auto"
-        >
-          <template slot="prepend"><i class="el-icon-search"></i></template>
-        </el-input>
         <el-table
           :data="
             myItems.filter(
               (i) =>
-                !searchItem ||
-                searchItem.trim() == '' ||
-                i.Name.indexOf(searchItem) != -1 ||
-                i.Desc.indexOf(searchItem) != -1
+                (isAddItem || i.m_iAmount > 0) &&
+                (!searchItem ||
+                  searchItem.trim() == '' ||
+                  i.Name.indexOf(searchItem) != -1 ||
+                  i.Desc.indexOf(searchItem) != -1)
             )
           "
-          border
           style="width: 100%"
           max-height="360"
           height="360"
@@ -73,21 +66,24 @@
               }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="物品描述" prop="Desc"> </el-table-column>
-          <el-table-column
-            label="物品数量"
-            width="110"
-            :filters="[
-              { text: '已有', value: 1 },
-              { text: '新增', value: 0 },
-            ]"
-            :filter-multiple="false"
-            :filtered-value="[1]"
-            :filter-method="
-              (query, row) =>
-                query == 0 ? row.m_iAmount == 0 : row.m_iAmount > 0
-            "
-          >
+          <el-table-column prop="Desc">
+            <template slot="header" slot-scope="_">
+              <el-input v-model="searchItem" size="mini" @dblclick="log(_)" />
+            </template>
+            <template slot-scope="scope">
+              <span style="font-size: 12px">{{ scope.row.Desc }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="物品数量" width="200">
+            <template slot="header" slot-scope="_">
+              <el-switch
+                v-model="isAddItem"
+                active-text="新增"
+                inactive-text="已有"
+                size="mini"
+                @dblclick="log(_)"
+              />
+            </template>
             <template slot-scope="scope">
               <el-input-number
                 style="margin-left: 10px; width: 5rem"
@@ -101,126 +97,167 @@
         </el-table>
       </el-form-item>
       <el-form-item label="队伍成员">
-        <el-row type="flex" justify="space-around">
-          <el-col :span="10">
+        <el-select
+          multiple
+          v-model="saveData.m_TeammateList"
+          size="small"
+          style="width: 50rem"
+          filterable
+        >
+          <el-option
+            v-for="npc in filteredNpcs"
+            :key="npc.ID"
+            :label="npc.sNpcName"
+            :value="npc.ID"
+            :title="npc.ID + '：' + npc.sIntroduction"
+          >
+            <span style="float: left">{{ npc.sNpcName }}</span>
+            <span
+              style="
+                float: right;
+                font-size: 0.7rem;
+                text-overflow: ellipsis;
+                width: 42rem;
+                overflow: hidden;
+                white-space: nowrap;
+                padding-left: 10px;
+              "
+              >{{ npc.sIntroduction }}</span
+            >
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="人物信息">
+        <el-select
+          v-model="currentTeammate"
+          placeholder="选择人物"
+          @change="chooseTeammate"
+          size="small"
+          style="width: 50rem"
+        >
+          <el-option
+            v-for="npcId in saveData.m_TeammateList"
+            :key="npcId"
+            :label="npcInfo(npcId).sNpcName"
+            :value="npcId"
+          >
+            <span style="float: left">{{ npcInfo(npcId).sNpcName }}</span>
+            <span
+              style="
+                float: right;
+                font-size: 0.7rem;
+                text-overflow: ellipsis;
+                width: 42rem;
+                overflow: hidden;
+                white-space: nowrap;
+                padding-left: 10px;
+              "
+              >{{ npcInfo(npcId).sIntroduction }}</span
+            >
+          </el-option>
+        </el-select>
+        <el-form inline v-if="currentTeammate">
+          <el-form-item label="臂力">
+            <el-input-number
+              style="margin-left: 10px; width: 3rem"
+              v-model="currentTeammateInfo.iStr"
+              size="mini"
+              :min="0"
+              :controls="false"
+            ></el-input-number
+            >/
+            <el-input-number
+              style="width: 3rem"
+              v-model="currentTeammateInfo.iMaxStr"
+              size="mini"
+              :min="0"
+              :controls="false"
+            ></el-input-number>
+          </el-form-item>
+          <el-form-item label="根骨">
+            <el-input-number
+              style="width: 3rem"
+              v-model="currentTeammateInfo.iCon"
+              size="mini"
+              :min="0"
+              :controls="false"
+            ></el-input-number
+            >/
+            <el-input-number
+              style="width: 3rem"
+              v-model="currentTeammateInfo.iMaxCon"
+              size="mini"
+              :min="0"
+              :controls="false"
+            ></el-input-number>
+          </el-form-item>
+          <el-form-item label="悟性">
+            <el-input-number
+              style="width: 4rem"
+              v-model="currentTeammateInfo.iInt"
+              size="mini"
+              :min="0"
+              :controls="false"
+            ></el-input-number
+            >/
+            <el-input-number
+              style="width: 4rem"
+              v-model="currentTeammateInfo.iMaxInt"
+              size="mini"
+              :min="0"
+              :controls="false"
+            ></el-input-number>
+          </el-form-item>
+          <el-form-item label="身法">
+            <el-input-number
+              style="width: 4rem"
+              v-model="currentTeammateInfo.iDex"
+              size="mini"
+              :min="0"
+              :controls="false"
+            ></el-input-number
+            >/
+            <el-input-number
+              style="width: 4rem"
+              v-model="currentTeammateInfo.iMaxDex"
+              size="mini"
+              :min="0"
+              :controls="false"
+            ></el-input-number>
+          </el-form-item>
+          <el-form-item label="天赋">
             <el-select
-              v-model="currentTeammate"
-              placeholder="选择队员进行修改"
-              @change="chooseTeammate"
+              style="width: 40rem"
+              multiple
+              v-model="currentTeammateInfo.TalentList"
             >
               <el-option
-                v-for="npcId in saveData.m_TeammateList"
-                :key="npcId"
-                :label="npcInfo(npcId).sNpcName"
-                :value="npcId"
-              />
-            </el-select>
-          </el-col>
-          <el-col :span="10">
-            <el-button @click="teammateVisible = true">修改队员</el-button>
-          </el-col>
-        </el-row>
-      </el-form-item>
-      <el-form inline v-if="currentTeammate">
-        <el-form-item label="臂力">
-          <el-input-number
-            style="margin-left: 10px; width: 3rem"
-            v-model="currentTeammateInfo.iStr"
-            size="mini"
-            :min="0"
-            :controls="false"
-          ></el-input-number
-          >/
-          <el-input-number
-            style="width: 3rem"
-            v-model="currentTeammateInfo.iMaxStr"
-            size="mini"
-            :min="0"
-            :controls="false"
-          ></el-input-number>
-        </el-form-item>
-        <el-form-item label="根骨">
-          <el-input-number
-            style="width: 3rem"
-            v-model="currentTeammateInfo.iCon"
-            size="mini"
-            :min="0"
-            :controls="false"
-          ></el-input-number
-          >/
-          <el-input-number
-            style="width: 3rem"
-            v-model="currentTeammateInfo.iMaxCon"
-            size="mini"
-            :min="0"
-            :controls="false"
-          ></el-input-number>
-        </el-form-item>
-        <el-form-item label="悟性">
-          <el-input-number
-            style="width: 4rem"
-            v-model="currentTeammateInfo.iInt"
-            size="mini"
-            :min="0"
-            :controls="false"
-          ></el-input-number
-          >/
-          <el-input-number
-            style="width: 4rem"
-            v-model="currentTeammateInfo.iMaxInt"
-            size="mini"
-            :min="0"
-            :controls="false"
-          ></el-input-number>
-        </el-form-item>
-        <el-form-item label="身法">
-          <el-input-number
-            style="width: 4rem"
-            v-model="currentTeammateInfo.iDex"
-            size="mini"
-            :min="0"
-            :controls="false"
-          ></el-input-number
-          >/
-          <el-input-number
-            style="width: 4rem"
-            v-model="currentTeammateInfo.iMaxDex"
-            size="mini"
-            :min="0"
-            :controls="false"
-          ></el-input-number>
-        </el-form-item>
-        <el-form-item label="天赋">
-          <el-select
-            style="width: 40rem"
-            multiple
-            v-model="currentTeammateInfo.TalentList"
-          >
-            <el-option
-              v-for="talent in talents"
-              :key="talent.iTalenID"
-              :label="talent.sTalenName"
-              :value="talent.iTalenID"
-              :title="talent.sTalenTip"
-            >
-              <span style="float: left">{{ talent.sTalenName }}</span>
-              <span
-                style="
-                  float: right;
-                  font-size: 0.7rem;
-                  text-overflow: ellipsis;
-                  width: 35em;
-                  overflow: hidden;
-                  white-space: nowrap;
-                  padding-left: 20px;
-                "
-                >{{ talent.sTalenTip }}</span
+                v-for="talent in talents"
+                :key="talent.iTalenID"
+                :label="talent.sTalenName"
+                :value="talent.iTalenID"
+                :title="talent.sTalenTip"
               >
-            </el-option>
-          </el-select>
-        </el-form-item>
-      </el-form>
+                <span style="float: left">{{ talent.sTalenName }}</span>
+                <span
+                  style="
+                    float: right;
+                    font-size: 0.7rem;
+                    text-overflow: ellipsis;
+                    width: 35em;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    padding-left: 20px;
+                  "
+                  >{{ talent.sTalenTip }}</span
+                >
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-form>
+      </el-form-item>
     </el-form>
+
     <p v-else>请选择存档文件</p>
     <el-dialog title="修改队员" :visible.sync="teammateVisible" width="40rem">
       <el-transfer
@@ -265,6 +302,7 @@ export default {
       iteamVisible: false,
       selectedItem: [],
       searchItem: null,
+      isAddItem: false,
     };
   },
   props: ["saveFileHandler"],
@@ -287,6 +325,9 @@ export default {
         (n) => n.iNpcID == value
       );
     },
+    log(...args) {
+      console.log(args);
+    },
   },
   watch: {
     saveFileHandler: async function (newValue) {
@@ -299,7 +340,6 @@ export default {
           this.filteredNpcs = this.npcs.filter((n) =>
             this.saveData.m_NpcList.find((npc) => npc.iNpcID == n.ID)
           );
-          // this.filteredNpcs = this.npcs.filter((n) => n.iFriendly == 1);
           if (this.saveData.m_BackpackList && this.items) {
             let items = [...this.items];
             items.forEach((item) => {
