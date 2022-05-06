@@ -227,7 +227,7 @@
           </el-form-item>
           <el-form-item label="天赋">
             <el-select
-              style="width: 40rem"
+              style="width: 47rem"
               multiple
               v-model="currentTeammateInfo.TalentList"
             >
@@ -256,7 +256,7 @@
           </el-form-item>
           <el-form-item label="血量">
             <el-input-number
-              style="margin-left: 10px; width: 3rem"
+              style="margin-left: 10px; width: 7rem"
               v-model="currentTeammateInfo.iMaxHp"
               size="mini"
               :min="0"
@@ -265,7 +265,7 @@
           </el-form-item>
           <el-form-item label="内力">
             <el-input-number
-              style="margin-left: 10px; width: 3rem"
+              style="margin-left: 10px; width: 7rem"
               v-model="currentTeammateInfo.iMaxSp"
               size="mini"
               :min="0"
