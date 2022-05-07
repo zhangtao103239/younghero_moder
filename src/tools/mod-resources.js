@@ -517,7 +517,7 @@ export let itemData = `#ID	Name	Type	Code0	Image	Desc	Buy	Sell	Code0	Code0	Code1
 130137	月照梨花	1	0	i00275	唐伯虎在一次酒宴中所绘，扇面以特殊技法缀点梨花，将梨花在月光下错落之态勾勒得栩栩如生。<br>扇骨仿梨花枝叶以精钢千锤百炼而成。	20000	5000	0	0	1	1	0	1	99	210	180018	7	910231	0	0	0	0	0	0	0	7	0	200044	0	0	0
 130138	点翠鎏金	3	0	i00185	手工精致的金簪，以珍贵的珠玉点缀而成。	10000	2500	0	0	1	1	0	7	910236	0	0	0	0	0	0	0	0	0	0	0	0	0	99	0	0	0`
 
-export let neigongData = `#ID	Name	Desc	sUpgradeNotes	LevelUP	MaxUP	iExp	sIcon1	ConditionEffectID1	sConditions	ConditionEffectID2	sConditions	ConditionEffectID3	sConditions	ConditionEffectID3
+export let neigongData = `#ID	Name	Desc	sUpgradeNotes	LevelUP	MaxUP	iExp	sIcon1	ConditionEffectID1	sConditions1	ConditionEffectID2	sConditions2	ConditionEffectID3	sConditions3	ConditionEffectID4	sConditions4	ConditionEffectID5
 60001	逍遥雁行式	逍遥心法，海纳百川，不拘一格，是以修习法门亦取逍遥物外之意，传授之初仅授强身健体之基本口诀和中心要旨，往后如何修练全凭弟子自行悟出。荆棘自军队之雁行阵中得悟，气出丹田，将全身气劲于双臂之上，一刀一剑分从两侧进击，以攻代守，锐不可当。	气血+60，内力+30[c] [12C0D3]<br>满重增益：身法+3，移动距离+1[-][/c]<br>一重：累进伤暴 七重：神行 十重：连斩	(1,60)*(3,30)	(4,1)*(14,3)	3	NeigongImage22	100015	(10,0,60001,1)	100014	(10,0,60001,7)	100016	(10,0,60001,10)	910067
 60002	小无相功	不着形相，无迹可寻，身具此功者可模拟天下武功发劲。运行此功体后，反击能力获得飞跃性的提高，并能模仿对手发劲，若与敌人所执武器相近，能以对手的武功反击对手。闪避成功后，还能获得内力持续恢复的归元状态。	气血+120，内力+50 [c][12C0D3]<br>满重增益：反击+10%[-][/c]<br>一重：无相 七重：累进反击 十重：免疫暴击	(1,120)*(3,50)	(52,10)	6	NeigongImage23	100042	(10,0,60002,1)	100021	(10,0,60002,7)	100051	(10,0,60002,10)	910067
 60003	逍遥鹏飞式	逍遥心法，海纳百川，不拘一格，是以修习法门亦取逍遥物外之意，传授之初仅授强身健体之基本口诀和中心要旨，往后如何修练全凭弟子自行悟出。谷月轩自逍遥游中所述大鹏得悟，运气为翼，展翅千里，护友退敌，将其修习法门命名为鹏飞。	气血+80，内力+40 [c][12C0D3]<br>满重增益：气血+400[-][/c]<br>一重：回复 七重：保护 十重：反击后霸体	(1,80)*(3,40)	(1,400)	4	NeigongImage24	100011	(10,0,60003,1)	100012	(10,0,60003,7)	100013	(10,0,60003,10)	910067

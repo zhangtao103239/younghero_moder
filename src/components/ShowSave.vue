@@ -317,6 +317,72 @@
               :controls="false"
             ></el-input-number>
           </el-form-item>
+          <el-form-item label="内功">
+            <el-table
+              :data="
+                myNeigongs.filter(
+                  (i) =>
+                    (isAddNeigong || i.iLevel) &&
+                    (!searchNeigong ||
+                      searchNeigong.trim() == '' ||
+                      i.Name.indexOf(searchNeigong) != -1 ||
+                      i.Desc.indexOf(searchNeigong) != -1 ||
+                      (i.sUpgradeNotes &&
+                        i.sUpgradeNotes.indexOf(searchNeigong) != -1))
+                )
+              "
+              style="width: 60rem"
+              max-height="360"
+              height="360"
+            >
+              <el-table-column prop="ID" label="内功ID" width="80">
+              </el-table-column>
+              <el-table-column label="内功名称" width="140" prop="Name">
+              </el-table-column>
+              <el-table-column label="描述" width="340" prop="Desc">
+              </el-table-column>
+              <el-table-column label="升级说明">
+                <template slot="header" slot-scope="_">
+                  <el-input
+                    v-model="searchNeigong"
+                    size="mini"
+                    @dblclick="log(_)"
+                    prefix-icon="el-icon-search"
+                  >
+                  </el-input>
+                </template>
+                <template slot-scope="scope">
+                  <span style="font-size: 12px">{{
+                    scope.row.sUpgradeNotes
+                  }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="等级" width="200">
+                <template slot="header" slot-scope="_">
+                  <el-switch
+                    v-model="isAddNeigong"
+                    active-text="新增"
+                    inactive-text="已有"
+                    size="mini"
+                    @dblclick="log(_)"
+                  />
+                </template>
+                <template slot-scope="scope">
+                  <el-input
+                    style="width: 8rem"
+                    v-model="scope.row.iLevel"
+                    type="number"
+                    size="mini"
+                    :min="0"
+                    :max="10"
+                    :controls="false"
+                    @change="changeNeigongLevel(scope.row)"
+                    ><template slot="append">级</template></el-input
+                  >
+                </template>
+              </el-table-column>
+            </el-table>
+          </el-form-item>
         </el-form>
       </el-form-item>
     </el-form>
@@ -326,7 +392,13 @@
 </template>
 
 <script>
-import { npcData, itemData, talentNewData } from "../tools/mod-resources";
+import {
+  npcData,
+  itemData,
+  talentNewData,
+  neigongData,
+  routineExp,
+} from "../tools/mod-resources";
 import dataProcess from "../tools/data-process";
 export default {
   name: "ShowSave",
@@ -337,14 +409,19 @@ export default {
       currentTeammateInfo: {},
       npcs: [],
       items: [],
+      neigongs: [],
       talents: [],
+      routineExps: [],
+      myNeigongs: [],
       myItems: [],
       filteredNpcs: [],
       teammateVisible: false,
       iteamVisible: false,
       selectedItem: [],
       searchItem: null,
+      searchNeigong: null,
       isAddItem: false,
+      isAddNeigong: false,
     };
   },
   props: ["saveFileHandler"],
@@ -353,19 +430,60 @@ export default {
     npcInfo(npcId) {
       return this.npcs.find((npc) => npc.ID == npcId) || {};
     },
-    doNpcFilter(query, item) {
-      if (query.trim() == "") {
-        return true;
-      }
-      return (
-        item.sNpcName.indexOf(query) != -1 ||
-        (item.sIntroduction && item.sIntroduction.indexOf(query) != -1)
-      );
-    },
     chooseTeammate(value) {
       this.currentTeammateInfo = this.saveData.m_NpcList.find(
         (n) => n.iNpcID == value
       );
+      this.myNeigongs = this.neigongs.map((neigong) => {
+        let nei = {};
+        Object.assign(nei, neigong);
+        let old = this.currentTeammateInfo.NeigongList.find(
+          (n) => n.iSkillID == neigong.ID
+        );
+        if (old) {
+          Object.assign(nei, old);
+        }
+        return nei;
+      });
+    },
+    changeNeigongLevel(neigong) {
+      console.log(neigong);
+      if (neigong.iLevel <= 0 || neigong.iLevel > 10) {
+        neigong.iLevel = 0;
+        // 删除该内功
+        let nei = this.currentTeammateInfo.NeigongList.findIndex(
+          (n) => n.iSkillID == neigong.ID
+        );
+        if (nei != -1) {
+          this.currentTeammateInfo.NeigongList.splice(nei, 1);
+        }
+        return;
+      }
+      let exp = 0;
+      if (neigong.iLevel != 1) {
+        let routineExp = this.routineExps.find(
+          (e) => e.levelType == neigong.iExp
+        );
+        if (routineExp) {
+          exp = routineExp["level" + neigong.iLevel];
+        } else {
+          exp = 2000 * neigong.iLevel;
+        }
+      }
+      let old = this.currentTeammateInfo.NeigongList.find(
+        (n) => n.iSkillID == neigong.ID
+      );
+      if (old) {
+        old.iLevel = neigong.iLevel;
+        old.m_iAccumulationExp = exp;
+      } else {
+        this.currentTeammateInfo.NeigongList.push({
+          iLevel: neigong.iLevel,
+          m_iAccumulationExp: exp,
+          bUse: false,
+          iSkillID: neigong.ID,
+        });
+      }
     },
     log(...args) {
       console.log(args);
@@ -404,6 +522,8 @@ export default {
     this.npcs = dataProcess.text2Dict(npcData);
     this.items = dataProcess.text2Dict(itemData);
     this.talents = dataProcess.text2Dict(talentNewData);
+    this.neigongs = dataProcess.text2Dict(neigongData);
+    this.routineExps = dataProcess.text2Dict(routineExp);
   },
 };
 </script>
