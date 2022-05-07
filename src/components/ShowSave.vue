@@ -465,6 +465,7 @@
           </el-form-item>
         </el-form>
       </el-form-item>
+      <el-button type="success" @click="saveSaveFile">保存修改</el-button>
     </el-form>
 
     <p v-else>请选择存档文件</p>
@@ -639,6 +640,12 @@ export default {
     log(...args) {
       console.log(args);
     },
+    saveSaveFile: async function() {
+      const writable = await this.saveFileHandler.createWritable();
+      await writable.write(JSON.stringify(this.saveData, null, 0));
+      await writable.close();
+      this.$alert("写入存档成功！")
+    }
   },
   watch: {
     saveFileHandler: async function (newValue) {
