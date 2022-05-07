@@ -129,7 +129,7 @@
       </el-form-item>
       <el-form-item label="人物信息">
         <el-select
-          v-model="currentTeammate"
+          v-model="curTeammateId"
           placeholder="选择人物"
           @change="chooseTeammate"
           size="small"
@@ -156,11 +156,11 @@
             >
           </el-option>
         </el-select>
-        <el-form inline v-if="currentTeammate">
+        <el-form inline v-if="curTeammateId">
           <el-form-item label="臂力">
             <el-input-number
               style="margin-left: 10px; width: 3rem"
-              v-model="currentTeammateInfo.iStr"
+              v-model="curTeammateInfo.iStr"
               size="mini"
               :min="0"
               :controls="false"
@@ -168,7 +168,7 @@
             >/
             <el-input-number
               style="width: 3rem"
-              v-model="currentTeammateInfo.iMaxStr"
+              v-model="curTeammateInfo.iMaxStr"
               size="mini"
               :min="0"
               :controls="false"
@@ -177,7 +177,7 @@
           <el-form-item label="根骨">
             <el-input-number
               style="width: 3rem"
-              v-model="currentTeammateInfo.iCon"
+              v-model="curTeammateInfo.iCon"
               size="mini"
               :min="0"
               :controls="false"
@@ -185,7 +185,7 @@
             >/
             <el-input-number
               style="width: 3rem"
-              v-model="currentTeammateInfo.iMaxCon"
+              v-model="curTeammateInfo.iMaxCon"
               size="mini"
               :min="0"
               :controls="false"
@@ -194,7 +194,7 @@
           <el-form-item label="悟性">
             <el-input-number
               style="width: 4rem"
-              v-model="currentTeammateInfo.iInt"
+              v-model="curTeammateInfo.iInt"
               size="mini"
               :min="0"
               :controls="false"
@@ -202,7 +202,7 @@
             >/
             <el-input-number
               style="width: 4rem"
-              v-model="currentTeammateInfo.iMaxInt"
+              v-model="curTeammateInfo.iMaxInt"
               size="mini"
               :min="0"
               :controls="false"
@@ -211,7 +211,7 @@
           <el-form-item label="身法">
             <el-input-number
               style="width: 4rem"
-              v-model="currentTeammateInfo.iDex"
+              v-model="curTeammateInfo.iDex"
               size="mini"
               :min="0"
               :controls="false"
@@ -219,7 +219,7 @@
             >/
             <el-input-number
               style="width: 4rem"
-              v-model="currentTeammateInfo.iMaxDex"
+              v-model="curTeammateInfo.iMaxDex"
               size="mini"
               :min="0"
               :controls="false"
@@ -229,7 +229,7 @@
             <el-select
               style="width: 47rem"
               multiple
-              v-model="currentTeammateInfo.TalentList"
+              v-model="curTeammateInfo.TalentList"
             >
               <el-option
                 v-for="talent in talents"
@@ -257,7 +257,7 @@
           <el-form-item label="血量">
             <el-input-number
               style="margin-left: 10px; width: 7rem"
-              v-model="currentTeammateInfo.iMaxHp"
+              v-model="curTeammateInfo.iMaxHp"
               size="mini"
               :min="0"
               :controls="false"
@@ -266,7 +266,7 @@
           <el-form-item label="内力">
             <el-input-number
               style="margin-left: 10px; width: 7rem"
-              v-model="currentTeammateInfo.iMaxSp"
+              v-model="curTeammateInfo.iMaxSp"
               size="mini"
               :min="0"
               :controls="false"
@@ -275,7 +275,7 @@
           <el-form-item label="暴击">
             <el-input-number
               style="margin-left: 10px; width: 3rem"
-              v-model="currentTeammateInfo.iCri"
+              v-model="curTeammateInfo.iCri"
               size="mini"
               :min="0"
               :controls="false"
@@ -284,7 +284,7 @@
           <el-form-item label="反击">
             <el-input-number
               style="margin-left: 10px; width: 3rem"
-              v-model="currentTeammateInfo.iCounter"
+              v-model="curTeammateInfo.iCounter"
               size="mini"
               :min="0"
               :controls="false"
@@ -293,7 +293,7 @@
           <el-form-item label="闪避">
             <el-input-number
               style="margin-left: 10px; width: 3rem"
-              v-model="currentTeammateInfo.iDodge"
+              v-model="curTeammateInfo.iDodge"
               size="mini"
               :min="0"
               :controls="false"
@@ -302,7 +302,7 @@
           <el-form-item label="连击">
             <el-input-number
               style="margin-left: 10px; width: 3rem"
-              v-model="currentTeammateInfo.iCombo"
+              v-model="curTeammateInfo.iCombo"
               size="mini"
               :min="0"
               :controls="false"
@@ -311,7 +311,7 @@
           <el-form-item label="移动格数">
             <el-input-number
               style="margin-left: 10px; width: 3rem"
-              v-model="currentTeammateInfo.iMoveStep"
+              v-model="curTeammateInfo.iMoveStep"
               size="mini"
               :min="0"
               :controls="false"
@@ -405,8 +405,8 @@ export default {
   data() {
     return {
       saveData: {},
-      currentTeammate: null,
-      currentTeammateInfo: {},
+      curTeammateId: null,
+      curTeammateInfo: {},
       npcs: [],
       items: [],
       neigongs: [],
@@ -415,9 +415,6 @@ export default {
       myNeigongs: [],
       myItems: [],
       filteredNpcs: [],
-      teammateVisible: false,
-      iteamVisible: false,
-      selectedItem: [],
       searchItem: null,
       searchNeigong: null,
       isAddItem: false,
@@ -431,13 +428,13 @@ export default {
       return this.npcs.find((npc) => npc.ID == npcId) || {};
     },
     chooseTeammate(value) {
-      this.currentTeammateInfo = this.saveData.m_NpcList.find(
+      this.curTeammateInfo = this.saveData.m_NpcList.find(
         (n) => n.iNpcID == value
       );
       this.myNeigongs = this.neigongs.map((neigong) => {
         let nei = {};
         Object.assign(nei, neigong);
-        let old = this.currentTeammateInfo.NeigongList.find(
+        let old = this.curTeammateInfo.NeigongList.find(
           (n) => n.iSkillID == neigong.ID
         );
         if (old) {
@@ -447,15 +444,14 @@ export default {
       });
     },
     changeNeigongLevel(neigong) {
-      console.log(neigong);
       if (neigong.iLevel <= 0 || neigong.iLevel > 10) {
         neigong.iLevel = 0;
         // 删除该内功
-        let nei = this.currentTeammateInfo.NeigongList.findIndex(
+        let nei = this.curTeammateInfo.NeigongList.findIndex(
           (n) => n.iSkillID == neigong.ID
         );
         if (nei != -1) {
-          this.currentTeammateInfo.NeigongList.splice(nei, 1);
+          this.curTeammateInfo.NeigongList.splice(nei, 1);
         }
         return;
       }
@@ -470,14 +466,14 @@ export default {
           exp = 2000 * neigong.iLevel;
         }
       }
-      let old = this.currentTeammateInfo.NeigongList.find(
+      let old = this.curTeammateInfo.NeigongList.find(
         (n) => n.iSkillID == neigong.ID
       );
       if (old) {
         old.iLevel = neigong.iLevel;
         old.m_iAccumulationExp = exp;
       } else {
-        this.currentTeammateInfo.NeigongList.push({
+        this.curTeammateInfo.NeigongList.push({
           iLevel: neigong.iLevel,
           m_iAccumulationExp: exp,
           bUse: false,
