@@ -9,18 +9,20 @@
         <el-row type="flex" justify="space-around">
           <el-col :span="10">
             <el-input
-              v-model="saveData.m_iMoney"
+              v-model.number="saveData.m_iMoney"
               size="medium"
               style="width: 10rem"
+              type="number"
             >
               <template slot="prepend">金钱</template>
             </el-input>
           </el-col>
           <el-col :span="10">
             <el-input
-              v-model="saveData.m_iAttributePoints"
+              v-model.number="saveData.m_iAttributePoints"
               size="medium"
               style="width: 10rem"
+              type="number"
             >
               <template slot="prepend">阅历</template>
             </el-input>
@@ -85,13 +87,17 @@
               />
             </template>
             <template slot-scope="scope">
-              <el-input-number
-                style="margin-left: 10px; width: 5rem"
-                v-model="scope.row.m_iAmount"
+              <el-input
+                style="width: 10rem"
+                v-model.number="scope.row.m_iAmount"
                 size="mini"
+                type="number"
                 :min="0"
-                :controls="false"
-              ></el-input-number>
+                :max="100"
+                @change="changeItemNumber(scope.row)"
+              >
+                <template slot="append">个</template></el-input
+              >
             </template>
           </el-table-column>
         </el-table>
@@ -340,6 +346,9 @@
               <el-table-column label="内功名称" width="140" prop="Name">
               </el-table-column>
               <el-table-column label="描述" width="340" prop="Desc">
+                <template slot-scope="scope">
+                  <span style="font-size: 12px">{{ scope.row.Desc }}</span>
+                </template>
               </el-table-column>
               <el-table-column label="升级说明">
                 <template slot="header" slot-scope="_">
@@ -370,13 +379,84 @@
                 <template slot-scope="scope">
                   <el-input
                     style="width: 8rem"
-                    v-model="scope.row.iLevel"
+                    v-model.number="scope.row.iLevel"
                     type="number"
                     size="mini"
                     :min="0"
                     :max="10"
                     :controls="false"
                     @change="changeNeigongLevel(scope.row)"
+                    ><template slot="append">级</template></el-input
+                  >
+                </template>
+              </el-table-column>
+            </el-table>
+          </el-form-item>
+          <el-form-item label="招式">
+            <el-table
+              :data="
+                myRoutines.filter(
+                  (i) =>
+                    (isAddRoutine || i.iLevel) &&
+                    (!searchRoutine ||
+                      searchRoutine.trim() == '' ||
+                      i.sRoutineName.indexOf(searchRoutine) != -1 ||
+                      i.sRoutineTip.indexOf(searchRoutine) != -1 ||
+                      (i.sUpgradeNotes &&
+                        i.sUpgradeNotes.indexOf(searchRoutine) != -1))
+                )
+              "
+              style="width: 60rem"
+              max-height="360"
+              height="360"
+            >
+              <el-table-column prop="iRoutineID" label="招式ID" width="80">
+              </el-table-column>
+              <el-table-column label="内功名称" width="140" prop="sRoutineName">
+              </el-table-column>
+              <el-table-column label="描述" width="340" prop="sRoutineTip">
+                <template slot-scope="scope">
+                  <span style="font-size: 12px">{{
+                    scope.row.sRoutineTip
+                  }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="升级说明">
+                <template slot="header" slot-scope="_">
+                  <el-input
+                    v-model="searchRoutine"
+                    size="mini"
+                    @dblclick="log(_)"
+                    prefix-icon="el-icon-search"
+                  >
+                  </el-input>
+                </template>
+                <template slot-scope="scope">
+                  <span style="font-size: 12px">{{
+                    scope.row.sUpgradeNotes
+                  }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="等级" width="200">
+                <template slot="header" slot-scope="_">
+                  <el-switch
+                    v-model="isAddRoutine"
+                    active-text="新增"
+                    inactive-text="已有"
+                    size="mini"
+                    @dblclick="log(_)"
+                  />
+                </template>
+                <template slot-scope="scope">
+                  <el-input
+                    style="width: 8rem"
+                    v-model.number="scope.row.iLevel"
+                    type="number"
+                    size="mini"
+                    :min="0"
+                    :max="10"
+                    :controls="false"
+                    @change="changeRoutineLevel(scope.row)"
                     ><template slot="append">级</template></el-input
                   >
                 </template>
@@ -398,6 +478,7 @@ import {
   talentNewData,
   neigongData,
   routineExp,
+  routineNewData,
 } from "../tools/mod-resources";
 import dataProcess from "../tools/data-process";
 export default {
@@ -411,14 +492,18 @@ export default {
       items: [],
       neigongs: [],
       talents: [],
+      routines: [],
       routineExps: [],
       myNeigongs: [],
       myItems: [],
+      myRoutines: [],
       filteredNpcs: [],
       searchItem: null,
       searchNeigong: null,
+      searchRoutine: null,
       isAddItem: false,
       isAddNeigong: false,
+      isAddRoutine: false,
     };
   },
   props: ["saveFileHandler"],
@@ -442,16 +527,27 @@ export default {
         }
         return nei;
       });
+      this.myRoutines = this.routines.map((routine) => {
+        let myRoutine = {};
+        Object.assign(myRoutine, routine);
+        let old = this.curTeammateInfo.RoutineList.find(
+          (r) => r.iSkillID == routine.iRoutineID
+        );
+        if (old) {
+          Object.assign(myRoutine, old);
+        }
+        return myRoutine;
+      });
     },
     changeNeigongLevel(neigong) {
+      let neigongIndex = this.curTeammateInfo.NeigongList.findIndex(
+        (n) => n.iSkillID == neigong.ID
+      );
       if (neigong.iLevel <= 0 || neigong.iLevel > 10) {
         neigong.iLevel = 0;
         // 删除该内功
-        let nei = this.curTeammateInfo.NeigongList.findIndex(
-          (n) => n.iSkillID == neigong.ID
-        );
-        if (nei != -1) {
-          this.curTeammateInfo.NeigongList.splice(nei, 1);
+        if (neigongIndex != -1) {
+          this.curTeammateInfo.NeigongList.splice(neigongIndex, 1);
         }
         return;
       }
@@ -466,10 +562,9 @@ export default {
           exp = 2000 * neigong.iLevel;
         }
       }
-      let old = this.curTeammateInfo.NeigongList.find(
-        (n) => n.iSkillID == neigong.ID
-      );
-      if (old) {
+
+      if (neigongIndex != -1) {
+        let old = this.curTeammateInfo.NeigongList[neigongIndex];
         old.iLevel = neigong.iLevel;
         old.m_iAccumulationExp = exp;
       } else {
@@ -478,6 +573,66 @@ export default {
           m_iAccumulationExp: exp,
           bUse: false,
           iSkillID: neigong.ID,
+        });
+      }
+    },
+    changeRoutineLevel(routine) {
+      let routineIdx = this.curTeammateInfo.RoutineList.findIndex(
+        (n) => n.iSkillID == routine.iRoutineID
+      );
+      if (routine.iLevel <= 0 || routine.iLevel > 10) {
+        routine.iLevel = 0;
+        // 删除该招式
+        if (routineIdx != -1) {
+          this.curTeammateInfo.RoutineList.splice(routineIdx, 1);
+        }
+        return;
+      }
+      let exp = 0;
+      if (routine.iLevel != 1) {
+        let routineExp = this.routineExps.find(
+          (e) => e.levelType == routine.iExp
+        );
+        if (routineExp) {
+          exp = routineExp["level" + routine.iLevel];
+        } else {
+          exp = 2000 * routine.iLevel;
+        }
+      }
+
+      if (routineIdx != -1) {
+        let old = this.curTeammateInfo.RoutineList[routineIdx];
+        old.iLevel = routine.iLevel;
+        old.m_iAccumulationExp = exp;
+      } else {
+        this.curTeammateInfo.RoutineList.push({
+          iLevel: routine.iLevel,
+          m_iAccumulationExp: exp,
+          bUse: false,
+          iSkillID: routine.iRoutineID,
+        });
+      }
+    },
+    changeItemNumber(item) {
+      let oldIndex = this.saveData.m_BackpackList.findIndex(
+        (i) => i.m_ItemID == item.ID
+      );
+      // 删除该物品
+      if (item.m_iAmount <= 0) {
+        item.m_iAmount = 0;
+        if (oldIndex != -1) {
+          this.saveData.m_BackpackList.splice(oldIndex, 1);
+        }
+        return;
+      }
+      if (oldIndex != -1) {
+        let old = this.saveData.m_BackpackList[oldIndex];
+        old.m_ItemID = item.m_iAmount;
+      } else {
+        this.saveData.m_BackpackList.push({
+          m_bNew: true,
+          m_iAmount: item.m_iAmount,
+          m_ItemID: item.ID,
         });
       }
     },
@@ -497,18 +652,15 @@ export default {
             this.saveData.m_NpcList.find((npc) => npc.iNpcID == n.ID)
           );
           if (this.saveData.m_BackpackList && this.items) {
-            let items = [...this.items];
-            items.forEach((item) => {
+            this.myItems = this.items.map((item) => {
+              let myItem = {};
+              Object.assign(myItem, item);
               let old = this.saveData.m_BackpackList.find(
                 (i) => i.m_ItemID == item.ID
-              );
-              if (old) {
-                item.m_iAmount = old.m_iAmount;
-              } else {
-                item.m_iAmount = 0;
-              }
+              ) || { m_iAmount: 0 };
+              Object.assign(myItem, old);
+              return myItem;
             });
-            this.myItems = items;
           }
         }
       }
@@ -519,6 +671,7 @@ export default {
     this.items = dataProcess.text2Dict(itemData);
     this.talents = dataProcess.text2Dict(talentNewData);
     this.neigongs = dataProcess.text2Dict(neigongData);
+    this.routines = dataProcess.text2Dict(routineNewData);
     this.routineExps = dataProcess.text2Dict(routineExp);
   },
 };
